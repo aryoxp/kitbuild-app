@@ -52,18 +52,43 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('open-file', (event) => {
+    // dialog.showOpenDialog(mainWindow, {
+    //   properties: ['openFile']
+    // }).then(result => {
+    //   // console.log(result.canceled)
+    //   // console.log(result.filePaths)
+    //   if (result.canceled) return;
+    //   let data = fs.readFileSync(result.filePaths[0], { encoding: 'utf-8'});
+    //   // console.log(data);
+    //   event.sender.send('send-content', data);
+    // }).catch(err => {
+    //   console.log(err)
+    // });
     dialog.showOpenDialog(mainWindow, {
       properties: ['openFile']
     }).then(result => {
-      // console.log(result.canceled)
-      // console.log(result.filePaths)
-      if (result.canceled) return;
-      let data = fs.readFileSync(result.filePaths[0], { encoding: 'utf-8'});
-      // console.log(data);
-      event.sender.send('send-content', data);
-    }).catch(err => {
-      console.log(err)
+      if (result.canceled) {
+        event.sender.send('open-file-result', false);
+        return;
+      }
+      if (result.filePaths.length > 0) {
+        let data = fs.readFileSync(result.filePaths[0], {
+          encoding: "utf-8"
+        });
+        event.sender.send('open-file-result', data);
+      }
     });
+  });
+
+  ipcMain.handle('save-file-as', (event, data) => {
+    let filePath = dialog.showSaveDialogSync(mainWindow, {
+      defaultPath: 'Untitled.cmap'
+    });
+    console.log(filePath, data);
+    if (filePath !== undefined) {
+      fs.writeFileSync(filePath, data);
+      event.sender.send('save-file-as-result', true);
+    } else event.sender.send('save-file-as-result', false);
   });
 })
 

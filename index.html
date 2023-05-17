@@ -21,7 +21,7 @@ data-core="
       ZXQ6ODA4MFwvZmlyYVwvY21hcFwvYXNzZXRcLyIsInNlc3NpZCI6InJtYWN1dTVhc2tuMWc4ZWwybnI3
       dmNxZGczIn0=">
     <link rel="stylesheet" href=".asset/vendor/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href=".asset/vendor/bootstrap-icons/bootstrap-icons.css">
+    <link rel="stylesheet" href=".asset/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href=".asset/vendor/general-ui/g.ui.css">
     <link rel="stylesheet" href=".asset/vendor/animate.min.css">
     <link rel="stylesheet" href=".asset/vendor/huebee/huebee.min.css">
@@ -29,31 +29,30 @@ data-core="
     <link rel="stylesheet" href=".asset/vendor/highlight/default.min.css">
     <link rel="stylesheet" href="cmap/asset/cmap.css">
     <link rel="icon" href="favicon.ico">
-    <title>Home &rsaquo; Index</title>
+    <title>Kit-Build: Concept Mapping</title>
     <script src="renderer.js"></script>
   </head>
   <body>
 <div class="d-flex flex-column vh-100">
-  <span class="position-absolute d-flex align-items-center text-white px-3 text-decoration-none">
-    <i class="bi bi-house pe-2" style="font-size: 1.8rem;"></i> <span>Home</span>
-  </span>
-  <div class="app-navbar d-flex p-2 ps-4" style="border-left: 125px solid #ff4444;">
+  <span class="position-absolute d-flex align-items-center text-white px-3 text-decoration-none"></span>
+  <div class="app-navbar d-flex p-1" style="border-left: 16px solid #ff4444;">
     <span class="app-buttons">
       <div class="btn-group btn-group-sm">
         <button class="bt-new btn btn-primary"><i class="bi bi-asterisk"></i> New</button>
         <button class="bt-open btn btn-sm btn-primary"><i class="bi bi-folder2-open"></i> Open</button>
       </div>
-      <div class="btn-group btn-group-sm ms-2">
+      <button class="bt-import btn btn-primary btn-sm"><i class="bi bi-arrow-right-short"></i><i class="bi bi-code-square"></i> Import</button>
+      <div class="btn-group btn-group-sm">
         <button class="bt-save btn btn-primary"><i class="bi bi-save"></i> Save</button>
         <button class="bt-save-as btn btn-primary"><i class="bi bi-front"></i> Save As...</button>
       </div>
-      <button class="bt-export btn btn-primary d-none"><i class="bi bi-send"></i> Export</button>
-      <div class="btn-group btn-group-sm ms-2">
+      <button class="bt-export btn btn-primary btn-sm"><i class="bi bi-send"></i> Export</button>
+      <div class="btn-group btn-group-sm">
         <button class="bt-content btn btn-secondary"><i class="bi bi-file-earmark-text"></i> Content</button>
       </div>
     </span>
-    <div class="flex-fill">&nbsp;</div>
-    <span>
+    <!-- <div class="flex-fill">&nbsp;</div> -->
+    <!-- <span>
       <div class="btn-group btn-group-sm">
         <button title="User" class="btn btn-outline-secondary btn-sm dropdown-toggle bt-profile d-none" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-people-fill"></i>
         </button>
@@ -63,7 +62,7 @@ data-core="
         <button class="btn btn-danger btn-sm bt-logout d-none"><i class="bi bi-power"></i> Logout</button>
       </div>
       <button class="btn btn-primary btn-sm bt-sign-in "><i class="bi bi-power"></i> Sign In</button>
-    </span>
+    </span> -->
   </div>
   <div class="d-flex flex-fill align-items-stretch p-2">
     <!-- container of this layout template must have a display: flex style -->
@@ -88,64 +87,21 @@ data-core="
 <form id="concept-map-save-as-dialog" class="card d-none">
   <h6 class="card-header"><i class="bi bi-file-earmark-plus dialog-icon"></i> <span class="dialog-title">Save Concept Map As...</span></h6>
   <div class="card-body">
-      <div class="row mb-1 align-items-center">
-        <label for="input-title" class="col-sm-3 col-form-label">Title</label>
-        <div class="col-sm-9">
-          <input type="text" name="title" class="form-control form-control-sm input-title" id="input-title">
+    <div class="row mb-1 align-items-center">
+      <label for="input-title" class="col-sm-3 col-form-label">Title</label>
+      <div class="col-sm-9">
+        <input type="text" name="title" class="form-control form-control-sm input-title" id="input-title">
+      </div>
+    </div>
+    <div class="row mb-1 align-items-center">
+      <label for="input-fid" class="col-sm-3 col-form-label">Custom ID (Optional)</label>
+      <div class="col-sm-9">
+        <div class="input-group">
+          <input type="text" class="form-control input-fid form-control-sm" name="fid" id="input-fid" style="text-transform: uppercase;" disabled>
+          <button title="Generate FID" class="bt-generate-fid btn btn-warning btn-sm" disabled><i class="bi bi-magic"></i></button>
         </div>
       </div>
-      <div class="row mb-1 align-items-center">
-        <label for="input-fid" class="col-sm-3 col-form-label">Custom ID (Optional)</label>
-        <div class="col-sm-9">
-          <div class="input-group">
-            <input type="text" class="form-control input-fid form-control-sm" name="fid" id="input-fid" style="text-transform: uppercase;" disabled>
-            <button title="Generate FID" class="bt-generate-fid btn btn-warning btn-sm" disabled><i class="bi bi-magic"></i></button>
-          </div>
-        </div>
-      </div>
-      <div class="row my-2"><small class="col-sm-12 text-center text-secondary fst-italic"><strong class="fs-bold text-primary">optionally</strong> associate with a topic:</small></div>
-      <div class="row mb-1 align-items-center">
-        <!-- <label for="select-topic" class="col-sm-3 col-form-label">Topic (Optional)</label> -->
-        <div class="col-sm-12">
-          <div class="input-group input-group-sm">
-            <select class="form-select form-control-sm" id="select-topic" name="topic" aria-label="Default select example" disabled>
-              <option value="" selected>No topic associated</option>
-              <!-- <option value="1">One</option>
-              <option value="2">Two</option>
-              <option value="3">Three</option> -->
-            </select>
-            <button class="btn btn-secondary bt-new-topic-form bt-sm" disabled><i class="bi bi-plus-lg"></i></button>
-          </div>
-        </div>
-      </div>
-      <div class="row my-2"><small class="col-sm-12 text-center text-secondary fst-italic"><strong class="fs-bold text-primary">optionally</strong> associate with existing text:</small></div>
-      <div class="row mb-1 align-items-center">
-        <div class="col-sm-12">
-          <select class="form-select form-select-sm" id="select-text" name="text" aria-label="Default select example" disabled>
-            <option value="" selected>No text associated</option>
-            <!-- <option value="1">One</option>
-            <option value="2">Two</option>
-            <option value="3">Three</option> -->
-          </select>
-        </div>
-      </div>
-      
-      <!-- <div class="row mb-1 align-items-center form-new-topic" style="display: none;">
-        <div class="col-sm-12">
-          <div class="card">
-            <div class="card-body">
-              <input type="text" class="form-control mb-1" placeholder="New Topic Name" aria-label="New Topic Name" aria-describedby="button-create-new-topic">
-              <select class="form-select mb-1" id="select-grup" aria-label="Default select example">
-                  <option selected>No group assigned</option>
-                  <option value="1">One</option>
-                  <option value="2">Two</option>
-                  <option value="3">Three</option>
-              </select>
-              <button class="bt-quick-create-topic btn btn-secondary" type="button" id="button-create-new-topic"><i class="bi bi-plus-lg"></i> Create Topic</button>
-            </div>
-          </div>
-        </div>
-      </div> -->
+    </div>
   </div>
   <div class="card-footer">
     <div class="row">
@@ -159,7 +115,7 @@ data-core="
 
 
 
-<form id="concept-map-open-dialog" class="card d-none">
+<!-- <form id="concept-map-open-dialog" class="card d-none">
   <h6 class="card-header"><i class="bi bi-folder2-open"></i> Open Concept Map</h6>
   <div class="card-body">
     <ul class="nav nav-pills" id="open-concept-map-tab" role="tablist">
@@ -208,27 +164,27 @@ data-core="
       </div>
     </div>
   </div>
-</form>
+</form> -->
 
 <div id="content-dialog" class="card d-none">
-    <h6 class="card-header d-flex">
-      <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-file-text"></i> <span class="dialog-title">Content</span></span>
-      <i class="bi bi-x-lg bt-close bt-x" role="button"></i>
-    </h6>
-    <div class="card-body position-relative overflow-hidden overflow-scroll d-flex flex-fill mb-3">
-      <div class="content text-secondary"></div>
-    </div>
-    <div class="card-footer d-flex justify-content-between align-items-center">
-      <span>
-        <span class="bt-scroll-top btn btn-sm ms-1 btn-primary px-3"><i class="bi bi-chevron-bar-up"></i> Back to Top</span>
-        <span class="bt-scroll-more btn btn-sm ms-1 btn-primary px-3"><i class="bi bi-chevron-down"></i> More</span>
-      </span>
-      <span>
-        <button class="btn btn-sm btn-secondary bt-close px-3">Close</button>
-        <button class="btn btn-sm resize-handle pe-0 ps-3"><i class="bi bi-textarea-resize"></i></button>
-      </span>
-    </div>
+  <h6 class="card-header d-flex">
+    <span class="drag-handle flex-fill"><i class="dialog-icon bi bi-file-text"></i> <span class="dialog-title">Content</span></span>
+    <i class="bi bi-x-lg bt-close bt-x" role="button"></i>
+  </h6>
+  <div class="card-body position-relative overflow-hidden overflow-scroll d-flex flex-fill mb-3">
+    <div class="content text-secondary"></div>
   </div>
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <span>
+      <span class="bt-scroll-top btn btn-sm ms-1 btn-primary px-3"><i class="bi bi-chevron-bar-up"></i> Back to Top</span>
+      <span class="bt-scroll-more btn btn-sm ms-1 btn-primary px-3"><i class="bi bi-chevron-down"></i> More</span>
+    </span>
+    <span>
+      <button class="btn btn-sm btn-secondary bt-close px-3">Close</button>
+      <button class="btn btn-sm resize-handle pe-0 ps-3"><i class="bi bi-textarea-resize"></i></button>
+    </span>
+  </div>
+</div>
 
 <div id="concept-map-export-dialog" class="card d-none">
   <h6 class="card-header"><i class="bi bi-send"></i> Export</h6>
@@ -238,6 +194,19 @@ data-core="
   <div class="card-footer text-end">
     <button class="btn btn-sm btn-secondary bt-cancel px-3">Cancel</button>
     <button class="btn btn-sm btn-primary ms-1 bt-clipboard px-3"><i class="bi bi-clipboard"></i> Copy to Clipboard</button>
+  </div>
+</div>
+
+<div id="concept-map-import-dialog" class="card d-none">
+  <h6 class="card-header"><i class="bi bi-arrow-right-short"></i><i class="bi bi-code-square"></i> Import</h6>
+  <div class="card-body">
+    <textarea class="form-control encoded-data" rows="5"></textarea>
+  </div>
+  <div class="card-footer d-flex text-end">
+    <button class="btn btn-sm btn-secondary bt-cancel px-3">Cancel</button>
+    <span class="flex-fill">&nbsp;</span>
+    <button class="btn btn-sm btn-success bt-paste"><i class="bi bi-clipboard"></i> Paste</button>
+    <button class="btn btn-sm btn-primary ms-1 bt-decode px-3"><i class="bi bi-clipboard"></i> Decode</button>
   </div>
 </div>
 
@@ -253,7 +222,7 @@ data-core="
   </div>
 </div> -->
 
-<div id="cgpass-dialog" class="card shadow mx-auto d-none">
+<!-- <div id="cgpass-dialog" class="card shadow mx-auto d-none">
   <div class="card-body">
     <h5 class="card-title">Change Password</h5>
     <h6 class="card-subtitle mb-2 text-username"><span class="text-secondary">User</span> &rsaquo; <span class="text-danger user-username"></span> &rsaquo; <span class="text-primary user-name"></span></h6>
@@ -294,7 +263,7 @@ data-core="
         <button type="submit" class="btn btn-primary ms-2 bt-cgpass">Change Password</button>
       </div>
     </form>
-  </div>
+  </div> -->
 </div>
 <!-- Dialog Modal -->
 <div class="modal" id="modal-dialog" tabindex="-1" aria-hidden="true">
@@ -335,7 +304,7 @@ data-core="
 </div>
 <!-- /Loading Modal -->
 <!-- SignIn Modal -->
-<div class="card d-none shadow" id="modal-sign-in" tabindex="-1" aria-hidden="true">
+<!-- <div class="card d-none shadow" id="modal-sign-in" tabindex="-1" aria-hidden="true">
   <div class="card-body mx-3 text-center">
     <form name="form-sign-in" autocomplete="off">
       <h1 class="h3 mb-4 mt-4 fw-normal">Sign in</h1>
@@ -356,7 +325,7 @@ data-core="
       <p class="mt-5 mb-3 text-muted">&copy; 2017-2023</p>
     </form> 
   </div>
-</div>
+</div> -->
 <!-- /SignIn Modal -->  </body>
   <!-- Scripts placed at the end of the document so the pages load faster -->
   <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
@@ -377,10 +346,10 @@ data-core="
   <script type="text/javascript" src=".asset/vendor/kitbuild/kbui.canvas.tool.js"></script>
   <script type="text/javascript" src=".asset/vendor/kitbuild/kbui.toolbar.js"></script>
   <script type="text/javascript" src=".asset/vendor/kitbuild/kitbuild.js"></script>
-  <script type="text/javascript" src=".asset/vendor/kitbuild/analyzer.js"></script>
-  <script type="text/javascript" src=".asset/vendor/kitbuild/logger.js"></script>
-  <script type="text/javascript" src=".asset/vendor/socket.io.min.js"></script>
-  <script type="text/javascript" src=".asset/vendor/kitbuild/kbui.collab.js"></script>
+  <!-- <script type="text/javascript" src=".asset/vendor/kitbuild/analyzer.js"></script> -->
+  <!-- <script type="text/javascript" src=".asset/vendor/kitbuild/logger.js"></script> -->
+  <!-- <script type="text/javascript" src=".asset/vendor/socket.io.min.js"></script> -->
+  <!-- <script type="text/javascript" src=".asset/vendor/kitbuild/kbui.collab.js"></script> -->
   <script type="text/javascript" src=".asset/vendor/highlight/highlight.min.js"></script>
   <script type="text/javascript" src=".asset/vendor/showdown.min.js"></script>
   <script type="text/javascript" src="cmap/asset/cmap.js"></script>

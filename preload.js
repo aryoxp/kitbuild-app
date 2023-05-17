@@ -11,15 +11,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
 const { contextBridge, ipcRenderer, ipcMain } = require('electron')
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  handleCounter: (callback) => ipcRenderer.on('update-counter', callback),
-  openFile: callback => {
-    let res = ipcRenderer.invoke('open-file');
-    // res.then(data => {
-    //   console.log(data);
-    // });
-  },
+contextBridge.exposeInMainWorld('api', {
+  // handleCounter: (callback) => ipcRenderer.on('update-counter', callback),
+  // openFile: callback => {
+  //   let res = ipcRenderer.invoke('open-file');
+  //   // res.then(data => {
+  //   //   console.log(data);
+  //   // });
+  // },
   handleContent: (callback) => ipcRenderer.on('send-content', callback),
+  saveFileAs: (data) => ipcRenderer.invoke('save-file-as', data).then(result => console.log(result)),
+  saveFileAsResult: (callback) => ipcRenderer.on('save-file-as-result', callback),
+  openFile: () => ipcRenderer.invoke('open-file'),
+  openFileResult: (callback) => ipcRenderer.on('open-file-result', callback),
 });
 
 // contextBridge.exposeInIsolatedWorld('electronAPI', {

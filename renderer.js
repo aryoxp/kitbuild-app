@@ -12,15 +12,16 @@
 //     counter.innerText = newValue
 // });
 
-window.electronAPI.handleContent((e, v) => {
-  console.warn(e, v);
-})
+// window.api.handleContent((e, v) => {
+//   console.warn(e, v);
+// })
 
-window.addEventListener('send-content', data => {
-  console.warn(data);
-});
+// window.addEventListener('send-content', data => {
+//   console.warn(data);
+// });
 
-electronAPI.openFile();
+// electronAPI.openFile();
 // $(() => {
 //   $('#counter').html('hello!');
 // });
+
