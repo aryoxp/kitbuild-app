@@ -19,12 +19,18 @@ contextBridge.exposeInMainWorld('api', {
   //   //   console.log(data);
   //   // });
   // },
-  handleContent: (callback) => ipcRenderer.on('send-content', callback),
-  saveFileAs: (data) => ipcRenderer.invoke('save-file-as', data).then(result => console.log(result)),
-  saveFileAsResult: (callback) => ipcRenderer.on('save-file-as-result', callback),
-  openFile: () => ipcRenderer.invoke('open-file'),
-  openFileResult: (callback) => ipcRenderer.on('open-file-result', callback),
-  composeKit: (data) => ipcRenderer.invoke('compose-kit', data),
+  // handleContent: (callback) => ipcRenderer.on('send-content', callback),
+  // saveFileAs: (data) => ipcRenderer.invoke('save-file-as', data).then(result => console.log(result)),
+  // saveFileAsResult: (callback) => ipcRenderer.on('save-file-as-result', callback),
+  // openFile: () => ipcRenderer.invoke('open-file'),
+  // openFileResult: (callback) => ipcRenderer.on('open-file-result', callback),
+  loadConceptMap: () => ipcRenderer.invoke('load-concept-map'),
+  loadConceptMapResult: (data) => ipcRenderer.on('load-concept-map-result', data),
+  openKit: (data) => ipcRenderer.on('open-kit', data),
+  loadKit: () => ipcRenderer.invoke('load-kit'),
+  loadKitResult: (data) => ipcRenderer.on('load-kit-result', data),
+  saveKit: (conceptMapData) => ipcRenderer.invoke('save-kit', conceptMapData),
+  saveKitResult: (data) => ipcRenderer.on('save-kit-result', data)
 });
 
 // contextBridge.exposeInIsolatedWorld('electronAPI', {

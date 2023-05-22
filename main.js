@@ -4,10 +4,14 @@
 const { app, dialog, BrowserWindow, ipcMain, electron } = require('electron')
 const path = require('path')
 const fs = require('fs');
+const ini = require('ini');
 const contextMenu = require('electron-context-menu');
 
 // const { dialog } = require('electron')
 var mainWindow;
+var composeKitWindow;
+
+var file;
 
 const createWindow = () => {
   // Create the browser window.
@@ -26,45 +30,67 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
-  // electron.ipcMain.addListener('mouse', function(event, e) {
-  //   event.returnValue = null;
-  //   mainWindow.webContents.inspectElement(e.x, e.y);
-  // });
+}
+
+const createComposeKitWindow = (data) => {
+  // Create the browser window.
+  composeKitWindow = new BrowserWindow({
+    width: 1024,
+    height: 1024,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload-compose-kit.js'),
+      spellcheck: true
+    },
+    autoHideMenuBar: true,
+    show: false
+  })
+  composeKitWindow.loadFile('compose-kit.html');
+  composeKitWindow.webContents.once('did-finish-load', () => {
+    // composeKitWindow.webContents.send('open-kit', data);
+    composeKitWindow.webContents.openDevTools();
+    composeKitWindow.show();
+  });
+
+}
+
+const createKitBuildWindow = (data) => {
+  // Create the browser window.
+  composeKitWindow = new BrowserWindow({
+    width: 1024,
+    height: 1024,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload-kitbuild.js'),
+      spellcheck: true
+    },
+    autoHideMenuBar: true,
+    show: false
+  })
+  composeKitWindow.loadFile('kitbuild.html');
+  composeKitWindow.webContents.once('did-finish-load', () => {
+    // composeKitWindow.webContents.send('open-kit', data);
+    composeKitWindow.webContents.openDevTools();
+    composeKitWindow.show();
+  });
+
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow()
+  createWindow();
+  createKitBuildWindow();
 
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   })
 
-  ipcMain.handle('read', () => 
-  {
-    return "poing";
-    // const fileContent = fs.readFileSync('./main.js', { encoding: 'utf-8' });
-    // return fileContent;
-  });
+  ipcMain.handle('ping', () => "pong");
 
-  ipcMain.handle('open-file', (event) => {
-    // dialog.showOpenDialog(mainWindow, {
-    //   properties: ['openFile']
-    // }).then(result => {
-    //   // console.log(result.canceled)
-    //   // console.log(result.filePaths)
-    //   if (result.canceled) return;
-    //   let data = fs.readFileSync(result.filePaths[0], { encoding: 'utf-8'});
-    //   // console.log(data);
-    //   event.sender.send('send-content', data);
-    // }).catch(err => {
-    //   console.log(err)
-    // });
-    dialog.showOpenDialog(mainWindow, {
+  ipcMain.handle('open-file', (event, data) => {
+    dialog.showOpenDialog(BrowserWindow.getFocusedWindow(), {
       properties: ['openFile']
     }).then(result => {
       if (result.canceled) {
@@ -75,21 +101,87 @@ app.whenReady().then(() => {
         let data = fs.readFileSync(result.filePaths[0], {
           encoding: "utf-8"
         });
-        event.sender.send('open-file-result', data);
+        file = ini.parse(data);
+        event.sender.send('open-file-result', file);
       }
     });
   });
 
+  ipcMain.handle('get-loaded-file', (event) => {
+    event.sender.send('get-loaded-file-result', file);
+  });
+
   ipcMain.handle('save-file-as', (event, data) => {
+    let filePath = dialog.showSaveDialogSync(BrowserWindow.getFocusedWindow(), {
+      defaultPath: 'Untitled.cmap'
+    });
+    console.log(filePath, data);
+    if (filePath !== undefined) {
+
+      if (fs.access(filePath, fs.F_OK, (err) => {
+        if (err) {
+          let d = {};
+          d.cmap = data
+          fs.writeFileSync(filePath, ini.stringify(d));
+          event.sender.send('save-file-as-result', true);
+          return;
+        } 
+        let d = ini.parse(fs.readFileSync(filePath, {encoding: 'utf-8'}));
+        d.cmap = data;
+        fs.writeFileSync(filePath, ini.stringify(d));
+        event.sender.send('save-file-as-result', true);
+      }));
+
+      
+    } else event.sender.send('save-file-as-result', false);
+  });
+
+  ipcMain.handle('compose-kit', (event, data) => {
+    createComposeKitWindow(data);
+    this.conceptMapData = data;
+    // console.log(data);
+    // composeKitWindow.webContents.send('open-kit', data);
+  });
+
+  ipcMain.handle('load-concept-map', (event) => {
+    let data = this.conceptMapData;
+    event.sender.send('load-concept-map-result', data);
+  });
+
+  ipcMain.handle('load-kit', (event) => {
+    let kit = file.kit;
+    event.sender.send('load-kit-result', kit);
+  });
+
+  ipcMain.handle('save-kit', (event, data) => {
     let filePath = dialog.showSaveDialogSync(mainWindow, {
       defaultPath: 'Untitled.cmap'
     });
     console.log(filePath, data);
     if (filePath !== undefined) {
-      fs.writeFileSync(filePath, data);
-      event.sender.send('save-file-as-result', true);
-    } else event.sender.send('save-file-as-result', false);
+      // fs.writeFileSync(filePath, data);
+      // event.sender.send('save-kit-result', true);
+
+      if (fs.access(filePath, fs.F_OK, (err) => {
+        if (err) {
+          let d = {};
+          d.cmap = file.cmap;
+          d.kit = data;
+          fs.writeFileSync(filePath, ini.stringify(d));
+          event.sender.send('save-file-as-result', true);
+          return;
+        } 
+        let d = ini.parse(fs.readFileSync(filePath, { encoding: 'utf-8'}));
+        d.cmap = file.cmap;
+        d.kit = data;
+        file = d;
+        fs.writeFileSync(filePath, ini.stringify(d));
+        event.sender.send('save-file-as-result', true);
+      }));
+
+    } else event.sender.send('save-kit-result', false);
   });
+
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

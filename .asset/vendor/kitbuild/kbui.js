@@ -832,6 +832,7 @@ class KitBuildUI {
     } catch (error) { throw error }
   }
   static composeKitMap(kitMapData) {
+    if(!kitMapData) throw "Invalid kit map data: " + typeof kitMapData;
     if(!kitMapData.conceptMap || !kitMapData.concepts 
       || !kitMapData.links || !kitMapData.linktargets)
       throw "Invalid kit data.";
@@ -907,7 +908,7 @@ class KitBuildUI {
         })
       })
       return kitMap;  
-    } catch (error) { throw error }
+    } catch (error) { console.error(error); throw error; }
   }
   static composeExtendedKitMap(kitMapData, kitSet, order = 1) {
     if(!kitMapData.conceptMap || !kitMapData.concepts 

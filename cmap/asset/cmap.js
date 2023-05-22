@@ -334,7 +334,7 @@ class CmapApp {
 
     api.openFileResult((e, data) => {
       console.log(e, data);
-      this.decodeMap(importDialog, data);
+      this.decodeMap(importDialog, data.cmap);
     });
 
 
@@ -610,28 +610,11 @@ class CmapApp {
       }, 3000);
     });
 
-
+    /** 
+     * Import
+     * */  
 
     $(".app-navbar .bt-import").on("click", (e) => {
-      // // console.log(e)
-      // let canvasData = KitBuildUI.buildConceptMapData(this.canvas);
-      // canvasData.direction = this.canvas.direction;
-      // if (CmapApp.inst.conceptMap && CmapApp.inst.conceptMap.map)
-      //   canvasData.map = CmapApp.inst.conceptMap.map;
-      // else
-      //   canvasData.map = {
-      //     cmid: null,
-      //     cmfid: null,
-      //     title: "Untitled",
-      //     direction: this.canvas.direction,
-      //     topic: null,
-      //     text: null,
-      //     author: this.user ? this.user.username : null,
-      //     create_time: null,
-      //   };
-      // $("#concept-map-export-dialog .encoded-data").val(
-      //   Core.compress(canvasData)
-      // );
       importDialog.show();
     });
 
@@ -701,7 +684,63 @@ class CmapApp {
   
   
   
+    /**
+     * Compose Kit
+     * */
+
+    $(".app-navbar").on("click", ".bt-compose-kit", () => {
+      let data = KitBuildUI.buildConceptMapData(this.canvas);
+      // console.log(CmapApp.inst.conceptMap);
+      let cmid = CmapApp.uuidv4();
+      try { cmid = CmapApp.inst.conceptMap.map.cmid; } catch (e) {}
+      data.map = {
+        cmid: cmid,
+        cmfid: null,
+        title: $("#input-title").val(),
+        direction: this.canvas.direction,
+        topic: null,
+        text: null,
+        author: this.user ? this.user.username : null,
+        create_time: null,
+      };
+      // console.log(data); return;
+      api.composeKit(data);
+    });
+
+    $("#kit-content-dialog .bt-scroll-top").on("click", (e) => {
+      $("#kit-content-dialog .content").parent().animate({ scrollTop: 0 }, 200);
+      L.log("scroll-top-content");
+    });
+
+    $("#kit-content-dialog .bt-scroll-more").on("click", (e) => {
+      let height = $("#kit-content-dialog .content").parent().height();
+      let scrollTop = $("#kit-content-dialog .content").parent().scrollTop();
+      $("#kit-content-dialog .content")
+        .parent()
+        .animate({ scrollTop: scrollTop + height - 16 }, 200);
+      L.log("scroll-more-content");
+    });
   
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
     // /** 
     //  * 
