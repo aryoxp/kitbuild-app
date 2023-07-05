@@ -6,6 +6,7 @@ const path = require('path')
 const fs = require('fs');
 const ini = require('ini');
 const contextMenu = require('electron-context-menu');
+const pako = require('pako');
 
 // const { dialog } = require('electron')
 var mainWindow;
@@ -109,78 +110,113 @@ app.whenReady().then(() => {
     });
   });
 
+  var saveFile = function (event, data, options) {
+    options = Object.assign({silent: false}, options);
+    console.log(data, options);
+    let filePath = data.fileName;
+    
+    if(!filePath) {
+      filePath = dialog.showSaveDialogSync(BrowserWindow.getFocusedWindow(), {
+        defaultPath: 'temp.cmap'
+      });
+      if (filePath === undefined) {
+        event.sender.send((options.silent ? 'save-file-as-result-silent' : 'save-file-as-result'), false);
+        return;
+      }
+    }
+    if (fs.access(filePath, fs.F_OK, (err) => {
+      if (err) {
+        let d = {};
+        delete data.fileName;
+        d.conceptMap = compress(data);
+        let fileData = ini.stringify(d);
+        fs.writeFileSync(filePath, fileData);
+        event.sender.send((options.silent ? 'save-file-as-result-silent' : 'save-file-as-result'), true, filePath, ini.parse(fileData));
+        return;
+      } 
+      let d = ini.parse(fs.readFileSync(filePath, {encoding: 'utf-8'}));
+      d.conceptMap = compress(data);
+      console.log(filePath, ini.stringify(d));
+      let fileData = ini.stringify(d);
+      fs.writeFileSync(filePath, fileData);
+      event.sender.send((options.silent ? 'save-file-as-result-silent' : 'save-file-as-result'), true, filePath, ini.parse(fileData));
+    }));
+  }
+
   ipcMain.handle('get-loaded-file', (event) => {
     event.sender.send('get-loaded-file-result', file);
   });
 
-  ipcMain.handle('save-file-as', (event, data) => {
-    let filePath = dialog.showSaveDialogSync(BrowserWindow.getFocusedWindow(), {
-      defaultPath: 'Untitled.cmap'
-    });
-    console.log(filePath, data);
-    if (filePath !== undefined) {
+  ipcMain.handle('save-file-as', (event, data) => saveFile(event, data));
+  ipcMain.handle('save-file-as-silent', (event, data) => saveFile(event, data, {silent: true}));
 
-      if (fs.access(filePath, fs.F_OK, (err) => {
-        if (err) {
-          let d = {};
-          d.conceptmap = data;
-          fs.writeFileSync(filePath, ini.stringify(d));
-          event.sender.send('save-file-as-result', true);
-          return;
-        } 
-        let d = ini.parse(fs.readFileSync(filePath, {encoding: 'utf-8'}));
-        d.conceptmap = data;
-        console.log(ini.stringify(d));
-        fs.writeFileSync(filePath, ini.stringify(d));
-        event.sender.send('save-file-as-result', true);
-      }));
-    } else event.sender.send('save-file-as-result', false);
-  });
+  ipcMain.handle('compose-kit', (event, fileName) => {
+    console.log(fileName);
+    this.fileName = fileName;
+    createComposeKitWindow();
 
-  ipcMain.handle('compose-kit', (event, data) => {
-    createComposeKitWindow(data);
-    this.conceptMapData = data;
-    // console.log(data);
-    // composeKitWindow.webContents.send('open-kit', data);
+    // this.conceptMapData = data;
+    // let data = fs.readFileSync(fileName, {
+    //   encoding: "utf-8"
+    // });
+    // let file = ini.parse(data);
+    // file.fileName = fileName;
+    // // event.sender.send('open-file-result', file);
+    // console.log(data, file);
+    // composeKitWindow.webContents.send('open-kit', file);
   });
 
   ipcMain.handle('load-concept-map', (event) => {
-    let data = this.conceptMapData;
-    event.sender.send('load-concept-map-result', data);
+    let data = fs.readFileSync(this.fileName, {
+      encoding: "utf-8"
+    });
+    let file = ini.parse(data);
+    console.log(data, file);
+    event.sender.send('load-concept-map-result', file.conceptMap);
   });
 
   ipcMain.handle('load-kit', (event) => {
-    let kit = file.kit;
-    event.sender.send('load-kit-result', kit);
+    let data = fs.readFileSync(this.fileName, {
+      encoding: "utf-8"
+    });
+    let file = ini.parse(data);
+    console.log(data, file);
+    event.sender.send('load-kit-result', file.kit);
   });
 
   ipcMain.handle('save-kit', (event, data) => {
-    let filePath = dialog.showSaveDialogSync(mainWindow, {
-      defaultPath: 'Untitled.cmap'
-    });
-    console.log(filePath, data);
-    if (filePath !== undefined) {
-      // fs.writeFileSync(filePath, data);
-      // event.sender.send('save-kit-result', true);
+    let d = ini.parse(fs.readFileSync(this.fileName, { encoding: 'utf-8'}));
+    d.kit = compress(data);
+    console.log(d);
+    fs.writeFileSync(this.fileName, ini.stringify(d));
+    event.sender.send('save-kit-result', true, d);
 
-      if (fs.access(filePath, fs.F_OK, (err) => {
-        if (err) {
-          let d = {};
-          d.cmap = file.cmap;
-          d.kit = data;
-          fs.writeFileSync(filePath, ini.stringify(d));
-          event.sender.send('save-file-as-result', true);
-          return;
-        } 
-        let d = ini.parse(fs.readFileSync(filePath, { encoding: 'utf-8'}));
-        d.cmap = file.cmap;
-        d.kit = data;
-        file = d;
-        fs.writeFileSync(filePath, ini.stringify(d));
-        event.sender.send('save-file-as-result', true);
-      }));
+    // let filePath = dialog.showSaveDialogSync(mainWindow, {
+    //   defaultPath: 'Untitled.cmap'
+    // });
+    // console.log(filePath, data);
+    // if (filePath !== undefined) {
+    //   // fs.writeFileSync(filePath, data);
+    //   // event.sender.send('save-kit-result', true);
 
-    } else event.sender.send('save-kit-result', false);
+    //   if (fs.access(filePath, fs.F_OK, (err) => {
+    //     if (err) {
+    //       let d = {};
+    //       d.cmap = file.cmap;
+    //       d.kit = data;
+    //       fs.writeFileSync(filePath, ini.stringify(d));
+    //       event.sender.send('save-file-as-result', true);
+    //       return;
+    //     } 
+    //     let d = ini.parse(fs.readFileSync(filePath, { encoding: 'utf-8'}));
+    //     d.cmap = file.cmap;
+    //     d.kit = data;
+    //     file = d;
+    //     fs.writeFileSync(filePath, ini.stringify(d));
+    //     event.sender.send('save-file-as-result', true);
+    //   }));
+
+    // } else event.sender.send('save-kit-result', false);
   });
 
 })
@@ -218,4 +254,14 @@ function uuidv4() {
   return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
   );
+}
+
+function compress(data) { // encoded to base64 encoding
+  return btoa(String.fromCharCode.apply(null, pako.gzip(JSON.stringify(data), {to: 'string'})))
+}
+
+function decompress(data) { // decoded from base64 encoding
+  return JSON.parse(pako.ungzip(new Uint8Array(atob(data).split('').map(c => { 
+    return c.charCodeAt(0); 
+  })), {to: 'string'}))
 }

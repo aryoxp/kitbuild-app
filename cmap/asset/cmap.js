@@ -240,8 +240,8 @@ class CmapApp {
         };
         data.fileName = this.fileName ? this.fileName : null;
         console.log(data, Core.compress(data));
-        if (data.fileName == null) api.saveFileAs(Core.compress(data));
-        
+        // if (data.fileName == null) api.saveFileAs(Core.compress(data));
+        api.saveFileAs(data);
         // api.saveFileAs(Core.compress(data));
       }).show();
       // console.log(CmapApp.inst)
@@ -255,17 +255,30 @@ class CmapApp {
       //     .show();
     });
 
-    // $(".app-navbar .bt-save-as").on("click", () => {
-    //   if (this.canvas.cy.elements().length == 0) {
-    //     UI.warning("Nothing to save. Canvas is empty.").show();
-    //     return;
-    //   }
-    //   saveAsDialog
-    //     .setConceptMap()
-    //     .setTitle("Save Concept Map As...")
-    //     .setIcon("file-earmark-plus")
-    //     .show();
-    // });
+    $(".app-navbar .bt-save-as").on("click", () => {
+      if (this.canvas.cy.elements().length == 0) {
+        UI.warning("Nothing to save. Canvas is empty.").show();
+        return;
+      }
+
+      UI.confirm("Save concept map on a new file?").positive(() => {
+        let data = {};
+        data.canvas = KitBuildUI.buildConceptMapData(this.canvas);
+        data.map = {
+          cmid: CmapApp.uuidv4(),
+          direction: this.canvas.direction,
+        };
+        data.fileName = null;
+        console.log(data, Core.compress(data));
+        api.saveFileAs(data);
+      }).show();
+
+      // saveAsDialog
+      //   .setConceptMap()
+      //   .setTitle("Save Concept Map As...")
+      //   .setIcon("file-earmark-plus")
+      //   .show();
+    });
 
     // $("#concept-map-save-as-dialog .input-title").on("focusout", (e) => {
     //   if (
@@ -298,69 +311,77 @@ class CmapApp {
     //   e.preventDefault();
     // });
 
-    $("#concept-map-save-as-dialog").on("submit", (e) => {
-      e.preventDefault();
-      // console.log($('#select-topic').val(), $('#select-topic').val().match(/^ *$/));
-      // let data = Object.assign(
-      //   {
-      //     cmid: saveAsDialog.cmid ? saveAsDialog.cmid : null,
-      //     // cmfid: $("#input-fid").val().match(/^ *$/) ? null : $("#input-fid").val().trim().toUpperCase(),
-      //     title: $("#input-title").val(),
-      //     direction: this.canvas.direction,
-      //     // topic: $("#select-topic").val().match(/^ *$/) ? null : $("#select-topic").val().trim(),
-      //     // text: $('#select-text').val().match(/^ *$/) ? null : $('#select-text').val().trim(),
-      //     type: CmapApp.defaultMapType,
-      //     author: this.user ? this.user.username : null,
-      //     create_time: null,
-      //   },
-      //   KitBuildUI.buildConceptMapData(this.canvas)
-      // ); 
-      let data = KitBuildUI.buildConceptMapData(this.canvas);
-      data.map = {
-        cmid: saveAsDialog.cmid ? saveAsDialog.cmid : CmapApp.uuidv4(),
-        cmfid: null,
-        title: $("#input-title").val(),
-        direction: this.canvas.direction,
-        topic: null,
-        text: null,
-        author: this.user ? this.user.username : null,
-        create_time: null,
-      };
-      console.log(data, Core.compress(data)); 
-      api.saveFileAs(Core.compress(data));
-      return;
-      // this.ajax
-      //   .post("kitBuildApi/saveConceptMap", { data: Core.compress(data) })
-      //   .then((conceptMap) => {
-      //     CmapApp.inst.setConceptMap(conceptMap);
-      //     UI.success("Concept map has been saved successfully.").show();
-      //     L.log(data.cmid ? "save-map" : "save-as-map", conceptMap.map, null, {
-      //       cmid: conceptMap.map.cmid,
-      //       includeMapData: true,
-      //     });
-      //     saveAsDialog.hide();
-      //   })
-      //   .catch((error) => {
-      //     UI.error("Error saving concept map: " + error).show();
-      //   });
-    });
+    // $("#concept-map-save-as-dialog").on("submit", (e) => {
+    //   e.preventDefault();
+    //   // console.log($('#select-topic').val(), $('#select-topic').val().match(/^ *$/));
+    //   // let data = Object.assign(
+    //   //   {
+    //   //     cmid: saveAsDialog.cmid ? saveAsDialog.cmid : null,
+    //   //     // cmfid: $("#input-fid").val().match(/^ *$/) ? null : $("#input-fid").val().trim().toUpperCase(),
+    //   //     title: $("#input-title").val(),
+    //   //     direction: this.canvas.direction,
+    //   //     // topic: $("#select-topic").val().match(/^ *$/) ? null : $("#select-topic").val().trim(),
+    //   //     // text: $('#select-text').val().match(/^ *$/) ? null : $('#select-text').val().trim(),
+    //   //     type: CmapApp.defaultMapType,
+    //   //     author: this.user ? this.user.username : null,
+    //   //     create_time: null,
+    //   //   },
+    //   //   KitBuildUI.buildConceptMapData(this.canvas)
+    //   // ); 
+    //   let data = KitBuildUI.buildConceptMapData(this.canvas);
+    //   data.map = {
+    //     cmid: saveAsDialog.cmid ? saveAsDialog.cmid : CmapApp.uuidv4(),
+    //     cmfid: null,
+    //     title: $("#input-title").val(),
+    //     direction: this.canvas.direction,
+    //     topic: null,
+    //     text: null,
+    //     author: this.user ? this.user.username : null,
+    //     create_time: null,
+    //   };
+    //   console.log(data, Core.compress(data)); 
+    //   api.saveFileAs(Core.compress(data));
+    //   return;
+    //   // this.ajax
+    //   //   .post("kitBuildApi/saveConceptMap", { data: Core.compress(data) })
+    //   //   .then((conceptMap) => {
+    //   //     CmapApp.inst.setConceptMap(conceptMap);
+    //   //     UI.success("Concept map has been saved successfully.").show();
+    //   //     L.log(data.cmid ? "save-map" : "save-as-map", conceptMap.map, null, {
+    //   //       cmid: conceptMap.map.cmid,
+    //   //       includeMapData: true,
+    //   //     });
+    //   //     saveAsDialog.hide();
+    //   //   })
+    //   //   .catch((error) => {
+    //   //     UI.error("Error saving concept map: " + error).show();
+    //   //   });
+    // });
 
 
-    api.saveFileAsResult((e, data) => {
-      console.log(e, data);
-      if (data) saveAsDialog.hide();
+    api.saveFileAsResult((e, data, fileName, fileData) => {
+      console.log(e, data, fileName, fileData);
+      if(data) UI.dialog('Save successful.').show();
+      else UI.dialog('Save error.').show();
+      this.fileName = fileName;
+      this.fileData = fileData;
     });
+
+    api.saveFileAsResultSilent((e, data, fileName, fileData) => {
+      console.log(e, data, fileName, fileData);
+      api.composeKit(fileName);
+    }); 
 
     api.openFileResult((e, data) => {
       console.log(e, data);
       this.fileName = data.fileName;
+      delete data.fileName;
       this.fileData = data;
       this.decodeMap(importDialog, data.conceptMap);
-      console.error(this);
     });
 
     api.openFileCancelled((e, data) => {
-      console.warn(e, data);
+      console.warn(e, data, "Open file cancelled.");
     });
 
 
@@ -715,22 +736,45 @@ class CmapApp {
      * */
 
     $(".app-navbar").on("click", ".bt-compose-kit", () => {
-      let data = KitBuildUI.buildConceptMapData(this.canvas);
-      // console.log(CmapApp.inst.conceptMap);
-      let cmid = CmapApp.uuidv4();
-      try { cmid = CmapApp.inst.conceptMap.map.cmid; } catch (e) {}
-      data.map = {
-        cmid: cmid,
-        cmfid: null,
-        title: $("#input-title").val(),
-        direction: this.canvas.direction,
-        topic: null,
-        text: null,
-        author: this.user ? this.user.username : null,
-        create_time: null,
-      };
+      // let data = KitBuildUI.buildConceptMapData(this.canvas);
+      // // console.log(CmapApp.inst.conceptMap);
+      // let cmid = CmapApp.uuidv4();
+      // try { cmid = CmapApp.inst.conceptMap.map.cmid; } catch (e) {}
+      // data.map = {
+      //   cmid: cmid,
+      //   cmfid: null,
+      //   title: $("#input-title").val(),
+      //   direction: this.canvas.direction,
+      //   topic: null,
+      //   text: null,
+      //   author: this.user ? this.user.username : null,
+      //   create_time: null,
+      // };
       // console.log(data); return;
-      api.composeKit(data);
+      if (!this.fileName) {
+        UI.dialog('Please save your concept map before composing a kit.').show();
+        return;
+      }
+
+      UI.confirm('Save the concept map and begin composing a kit for this concept map?')
+        .positive(() => {
+          console.log(this.fileData);
+          let data = Core.decompress(this.fileData.conceptMap);
+          // if (this.fileData) {
+          //   let cmap = Core.decompress(this.fileData.conceptMap);
+          //   data.map = cmap.map;
+          //   data.map.direction = this.canvas.direction; 
+          // }
+          data.canvas = KitBuildUI.buildConceptMapData(this.canvas);
+          data.fileName = this.fileName;
+          // data.fileName = this.fileName ? this.fileName : null;
+          // console.log(data, Core.compress(data));
+          // // if (data.fileName == null) api.saveFileAs(Core.compress(data));
+          api.saveFileAsSilent(data);
+          // console.log(this.fileData);
+          // api.composeKit(this.fileName);
+        })
+        .show();
     });
 
     $("#kit-content-dialog .bt-scroll-top").on("click", (e) => {
@@ -984,8 +1028,9 @@ class CmapApp {
     try {
       console.log(data);
       let conceptMap = Core.decompress(data);
+      console.log(conceptMap);
       Object.assign(conceptMap, {
-        cyData: KitBuildUI.composeConceptMap(conceptMap),
+        cyData: KitBuildUI.composeConceptMap(conceptMap.canvas),
       });
       // KitBuildUI.composeConceptMap(conceptMap);
       console.log(conceptMap);

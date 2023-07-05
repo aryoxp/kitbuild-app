@@ -20,8 +20,10 @@ contextBridge.exposeInMainWorld('api', {
   //   // });
   // },
   handleContent: (callback) => ipcRenderer.on('send-content', callback),
-  saveFileAs: (data) => ipcRenderer.invoke('save-file-as', data).then(result => console.log(result)),
+  saveFileAs: (data) => ipcRenderer.invoke('save-file-as', data).then(result => {}),
   saveFileAsResult: (callback) => ipcRenderer.on('save-file-as-result', callback),
+  saveFileAsSilent: (data) => ipcRenderer.invoke('save-file-as-silent', data),
+  saveFileAsResultSilent: (callback) => ipcRenderer.on('save-file-as-result-silent', callback),
   openFile: () => ipcRenderer.invoke('open-file'),
   openFileResult: (callback) => ipcRenderer.on('open-file-result', callback),
   openFileCancelled: (callback) => ipcRenderer.on('open-file-cancelled', callback),

@@ -7,7 +7,7 @@ CDM.cmap = null;
 CDM.kit = null;
 CDM.option = {};
 
-console.error(CDM);
+// console.error(CDM);
 
 class PartitionTool extends KitBuildToolbarTool {
   constructor(canvas, kitMap, conceptMap, options) {
@@ -1081,12 +1081,41 @@ class MakeKitApp {
      * Save/Save As Kit
      * */
   
-    $('.app-navbar .bt-save').on('click', () => { // console.log(MakeKitApp.inst)
-      if (!this.kitMap) $('.app-navbar .bt-save-as').trigger('click')
-      else saveAsDialog.setKitMap(this.kitMap)
-        .setTitle("Save Kit (Update)")
-        .setIcon("file-earmark-check")
-        .show()
+    $('.app-navbar .bt-save').on('click', (e) => { // console.log(MakeKitApp.inst)
+      e.preventDefault();
+      // if (!this.conceptMap) {
+      //   UI.info('Please open a goalmap.').show()
+      //   return;
+      // }
+      // if ($('#input-title').val().trim().length == 0) {
+      //   UI.info('Please provide a name for the kit.').show()
+      //   return;
+      // }
+      // remove visual styles and unselect before saving...
+      this.canvas.cy.elements().removeClass('select').unselect();
+      let kitdata = {};
+      kitdata.canvas = KitBuildUI.buildConceptMapData(this.canvas);
+      kitdata.map = {
+        // kid: saveAsDialog.kitMap ? saveAsDialog.kitMap.map.kid : null,
+        // kfid: $('#input-fid').val().match(/^ *$/) ? null : $('#input-fid').val().trim().toUpperCase(),
+        // name: $('#input-title').val(),
+        // create_time: null,
+        // author: this.user ? this.user.username : null,
+        layout: 'preset',
+        options: CDM.option,
+        enabled: true,
+        cmid: this.conceptMap.map.cmid ? this.conceptMap.map.cmid : null,
+      };
+      // let compressedData = Core.compress(kitdata);
+      console.log(this.conceptMap, kitdata);
+      // this.setKitMap(kitdata);
+      api.saveKit(kitdata);
+
+      // if (!this.kitMap) $('.app-navbar .bt-save-as').trigger('click')
+      // else saveAsDialog.setKitMap(this.kitMap)
+      //   .setTitle("Save Kit (Update)")
+      //   .setIcon("file-earmark-check")
+      //   .show()
     })
     
     $('.app-navbar .bt-save-as').on('click', () => { // console.log(MakeKitApp.inst)
@@ -1184,7 +1213,8 @@ class MakeKitApp {
       if (this.canvas.cy.edges('[type="right"]').length)
       this.canvas.cy.edges('[type="right"]').remove();
       else {
-        this.conceptMap.linktargets.forEach(linktarget => {
+        console.log(this.conceptMap);
+        this.conceptMap.canvas.linktargets.forEach(linktarget => {
           this.canvas.cy.add({
             group: "edges",
             data: JSON.parse(linktarget.target_data)
@@ -1199,7 +1229,7 @@ class MakeKitApp {
       if (this.canvas.cy.edges('[type="left"]').length)
       this.canvas.cy.edges('[type="left"]').remove();
       else {
-        this.conceptMap.links.forEach(link => {
+        this.conceptMap.canvas.links.forEach(link => {
           if (!link.source_cid) return
           this.canvas.cy.add({
             group: "edges",
@@ -1219,14 +1249,14 @@ class MakeKitApp {
     $('.app-navbar .bt-restore').on('click', () => {
       if (!this.conceptMap) return
       this.canvas.cy.edges().remove();
-      this.conceptMap.links.forEach(link => {
+      this.conceptMap.canvas.links.forEach(link => {
         if (!link.source_cid) return
         this.canvas.cy.add({
           group: "edges",
           data: JSON.parse(link.source_data)
         })
       });
-      this.conceptMap.linktargets.forEach(linktarget => {
+      this.conceptMap.canvas.linktargets.forEach(linktarget => {
         this.canvas.cy.add({
           group: "edges",
           data: JSON.parse(linktarget.target_data)
@@ -1238,8 +1268,9 @@ class MakeKitApp {
     $('.app-navbar .bt-reset').on('click', () => {
       if (!this.conceptMap) return
       let confirm = UI.confirm("Do you want to reset the map to goalmap settings?").positive(() => {
+        console.log(this.conceptMap);
         this.canvas.cy.elements().remove()
-        this.canvas.cy.add(KitBuildUI.composeConceptMap(this.conceptMap))
+        this.canvas.cy.add(KitBuildUI.composeConceptMap(this.conceptMap.canvas))
         this.canvas.applyElementStyle()
         this.canvas.toolbar.tools.get(KitBuildToolbar.CAMERA).fit(null, {duration: 0})
         this.canvas.canvasTool.clearCanvas().clearIndicatorCanvas()
@@ -1248,14 +1279,13 @@ class MakeKitApp {
       }).show()
     });
 
-
-    api.openKit((event, data) => {
-      console.log(event, data);
-    });
+    // api.openKit((event, data) => {
+    //   console.error(event, data);
+    // });
 
     api.loadConceptMapResult((event, data) => {
       console.warn(event, data);
-      this.conceptMap = data;
+      this.conceptMap = Core.decompress(data);
       // this.showConceptMap(data);
       // L.log("open-concept-map", conceptMap.map, null, {
       //   cmid: conceptMap.map.cmid,
@@ -1266,24 +1296,25 @@ class MakeKitApp {
 
     api.saveKitResult((event, data) => {
       console.warn(event, data);
+      UI.dialog('Kit has been saved.').show();
     });
 
     api.loadKitResult((event, data) => {
-      console.log(data);
+      console.warn(event, data);
       if (data === undefined) {
         this.showConceptMap(this.conceptMap);
         return;
       }
       // this.showConceptMap();
       let kit = Core.decompress(data);
-      kit.conceptMap = this.conceptMap;
+      kit.canvas.conceptMap = this.conceptMap.canvas;
       console.warn(kit);
-      let cyData = KitBuildUI.composeKitMap(kit);
+      let cyData = KitBuildUI.composeKitMap(kit.canvas);
       this.canvas.cy.elements().remove();
       this.canvas.cy.add(cyData);
       this.canvas.applyElementStyle()
       this.canvas.toolbar.tools.get(KitBuildToolbar.CAMERA).fit(null, {duration: 0})
-      // MakeKitApp.buildKitSets(kit, this.canvas);
+      // MakeKitApp.buildKitSets(kit.canvas, this.canvas);
     });
   
   }
@@ -1297,7 +1328,8 @@ class MakeKitApp {
   
   
   showConceptMap(data) {
-    let cyData = KitBuildUI.composeConceptMap(data);
+    // data = Core.decompress(data);
+    let cyData = KitBuildUI.composeConceptMap(data.canvas);
     this.setConceptMap(data);
     this.canvas.cy.elements().remove();
     this.canvas.cy.add(cyData);
