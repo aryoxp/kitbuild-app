@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('api', {
   saveFileAsResult: (callback) => ipcRenderer.on('save-file-as-result', callback),
   openFile: () => ipcRenderer.invoke('open-file'),
   openFileResult: (callback) => ipcRenderer.on('open-file-result', callback),
+  openFileCancelled: (callback) => ipcRenderer.on('open-file-cancelled', callback),
   composeKit: (data) => ipcRenderer.invoke('compose-kit', data),
 });
 

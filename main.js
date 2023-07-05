@@ -94,7 +94,8 @@ app.whenReady().then(() => {
       properties: ['openFile']
     }).then(result => {
       if (result.canceled) {
-        event.sender.send('open-file-result', false);
+        event.sender.send('open-file-cancelled', true);
+        // event.sender.send('open-file-result', false);
         return;
       }
       if (result.filePaths.length > 0) {
@@ -102,6 +103,7 @@ app.whenReady().then(() => {
           encoding: "utf-8"
         });
         file = ini.parse(data);
+        file.fileName = result.filePaths[0];
         event.sender.send('open-file-result', file);
       }
     });
@@ -121,18 +123,17 @@ app.whenReady().then(() => {
       if (fs.access(filePath, fs.F_OK, (err) => {
         if (err) {
           let d = {};
-          d.cmap = data
+          d.conceptmap = data;
           fs.writeFileSync(filePath, ini.stringify(d));
           event.sender.send('save-file-as-result', true);
           return;
         } 
         let d = ini.parse(fs.readFileSync(filePath, {encoding: 'utf-8'}));
-        d.cmap = data;
+        d.conceptmap = data;
+        console.log(ini.stringify(d));
         fs.writeFileSync(filePath, ini.stringify(d));
         event.sender.send('save-file-as-result', true);
       }));
-
-      
     } else event.sender.send('save-file-as-result', false);
   });
 

@@ -9,6 +9,12 @@ class L {
 
 class CmapApp {
   constructor() {
+    
+    // Main data
+    this.fileName;
+    this.fileData;
+    this.conceptMap;
+
     this.kbui = KitBuildUI.instance(CmapApp.canvasId);
     let canvas = this.kbui.canvases.get(CmapApp.canvasId);
     canvas.addToolbarTool(KitBuildToolbar.UNDO_REDO, { priority: 3 });
@@ -89,97 +95,97 @@ class CmapApp {
   }
 
   handleEvent() {
-    let saveAsDialog = UI.modal("#concept-map-save-as-dialog", {
-      onShow: () => {
-        $("#concept-map-save-as-dialog .input-title").focus();
-        // console.log(this)
-        // KitBuild.getTopicListOfGroups(this.user.gids.split(",")).then(
-        //   (topics) => {
-        //     let list = '<option value="">No topic associated</option>';
-        //     topics.forEach((topic) => {
-        //       let selected =
-        //         this.conceptMap && this.conceptMap.map.topic == topic.tid ? " selected" : "";
-        //       if (
-        //         selected == "" &&
-        //         CmapApp.topic &&
-        //         CmapApp.topic.tid == topic.tid
-        //       )
-        //         selected = " selected";
-        //       list += `<option value="${topic.tid}"${selected}>${topic.title}</option>`;
-        //     });
-        //     $("#select-topic").html(list);
-        //   }
-        // );
-      },
-      hideElement: ".bt-cancel",
-    });
-    saveAsDialog.setConceptMap = (conceptMap) => {
-      if (conceptMap) {
-        saveAsDialog.cmid = conceptMap.map.cmid;
-        $("#input-fid").val(conceptMap.map.cmfid);
-        $("#input-title").val(conceptMap.map.title);
-        $("#select-topic").val(conceptMap.map.topic);
-        $("#select-text").val(conceptMap.map.text);
-        saveAsDialog.create_time = conceptMap.map.create_time;
-      } else {
-        saveAsDialog.cmid = null;
-        $("#input-fid").val("");
-        $("#input-title").val("");
-        $("#select-topic").val(null);
-        $("#select-text").val(null);
-      }
-      return saveAsDialog;
-    };
-    saveAsDialog.setTitle = (title) => {
-      $("#concept-map-save-as-dialog .dialog-title").html(title);
-      return saveAsDialog;
-    };
-    saveAsDialog.setIcon = (icon) => {
-      $("#concept-map-save-as-dialog .dialog-icon")
-        .removeClass()
-        .addClass(`dialog-icon bi bi-${icon} me-2`);
-      return saveAsDialog;
-    };
+    // let saveAsDialog = UI.modal("#concept-map-save-as-dialog", {
+    //   onShow: () => {
+    //     $("#concept-map-save-as-dialog .input-title").focus();
+    //     // console.log(this)
+    //     // KitBuild.getTopicListOfGroups(this.user.gids.split(",")).then(
+    //     //   (topics) => {
+    //     //     let list = '<option value="">No topic associated</option>';
+    //     //     topics.forEach((topic) => {
+    //     //       let selected =
+    //     //         this.conceptMap && this.conceptMap.map.topic == topic.tid ? " selected" : "";
+    //     //       if (
+    //     //         selected == "" &&
+    //     //         CmapApp.topic &&
+    //     //         CmapApp.topic.tid == topic.tid
+    //     //       )
+    //     //         selected = " selected";
+    //     //       list += `<option value="${topic.tid}"${selected}>${topic.title}</option>`;
+    //     //     });
+    //     //     $("#select-topic").html(list);
+    //     //   }
+    //     // );
+    //   },
+    //   hideElement: ".bt-cancel",
+    // });
+    // saveAsDialog.setConceptMap = (conceptMap) => {
+    //   if (conceptMap) {
+    //     saveAsDialog.cmid = conceptMap.map.cmid;
+    //     $("#input-fid").val(conceptMap.map.cmfid);
+    //     $("#input-title").val(conceptMap.map.title);
+    //     $("#select-topic").val(conceptMap.map.topic);
+    //     $("#select-text").val(conceptMap.map.text);
+    //     saveAsDialog.create_time = conceptMap.map.create_time;
+    //   } else {
+    //     saveAsDialog.cmid = null;
+    //     $("#input-fid").val("");
+    //     $("#input-title").val("");
+    //     $("#select-topic").val(null);
+    //     $("#select-text").val(null);
+    //   }
+    //   return saveAsDialog;
+    // };
+    // saveAsDialog.setTitle = (title) => {
+    //   $("#concept-map-save-as-dialog .dialog-title").html(title);
+    //   return saveAsDialog;
+    // };
+    // saveAsDialog.setIcon = (icon) => {
+    //   $("#concept-map-save-as-dialog .dialog-icon")
+    //     .removeClass()
+    //     .addClass(`dialog-icon bi bi-${icon} me-2`);
+    //   return saveAsDialog;
+    // };
 
-    let openDialog = UI.modal("#concept-map-open-dialog", {
-      hideElement: ".bt-cancel",
-      width: "650px",
-    });
+    // let openDialog = UI.modal("#concept-map-open-dialog", {
+    //   hideElement: ".bt-cancel",
+    //   width: "650px",
+    // });
 
-    let contentDialog = UI.modal("#content-dialog", {
-      hideElement: ".bt-close",
-      backdrop: false,
-      get height() {
-        return ($("body").height() * 0.7) | 0;
-      },
-      get offset() {
-        return { left: ($("body").width() * 0.1) | 0 };
-      },
-      draggable: true,
-      dragHandle: ".drag-handle",
-      resizable: true,
-      resizeHandle: ".resize-handle",
-      minWidth: 375,
-      minHeight: 200,
-      onShow: () => {
-        let sdown = new showdown.Converter({
-          strikethrough: true,
-          tables: true,
-          simplifiedAutoLink: true,
-        });
-        sdown.setFlavor("github");
-        let htmlText = contentDialog.text ? sdown.makeHtml(contentDialog.text.content) : "<em>Content text unavailable.</em>";
-        $("#content-dialog .content").html(htmlText);
-        hljs.highlightAll();
-      },
-    });
-    contentDialog.setContent = (text, type = "md") => {
-      contentDialog.text = text;
-      return contentDialog;
-    };
-    contentDialog.on("event", (event, data) => {
-      L.log(`content-${event}`, data);
-    });
+    // let contentDialog = UI.modal("#content-dialog", {
+    //   hideElement: ".bt-close",
+    //   backdrop: false,
+    //   get height() {
+    //     return ($("body").height() * 0.7) | 0;
+    //   },
+    //   get offset() {
+    //     return { left: ($("body").width() * 0.1) | 0 };
+    //   },
+    //   draggable: true,
+    //   dragHandle: ".drag-handle",
+    //   resizable: true,
+    //   resizeHandle: ".resize-handle",
+    //   minWidth: 375,
+    //   minHeight: 200,
+    //   onShow: () => {
+    //     let sdown = new showdown.Converter({
+    //       strikethrough: true,
+    //       tables: true,
+    //       simplifiedAutoLink: true,
+    //     });
+    //     sdown.setFlavor("github");
+    //     let htmlText = contentDialog.text ? sdown.makeHtml(contentDialog.text.content) : "<em>Content text unavailable.</em>";
+    //     $("#content-dialog .content").html(htmlText);
+    //     hljs.highlightAll();
+    //   },
+    // });
+    // contentDialog.setContent = (text, type = "md") => {
+    //   contentDialog.text = text;
+    //   return contentDialog;
+    // };
+    // contentDialog.on("event", (event, data) => {
+    //   L.log(`content-${event}`, data);
+    // });
 
     let exportDialog = UI.modal("#concept-map-export-dialog", {
       hideElement: ".bt-cancel",
@@ -225,59 +231,72 @@ class CmapApp {
     });
 
     $(".app-navbar .bt-save").on("click", () => {
+      UI.confirm("Save concept map?").positive(() => {
+        let data = {};
+        data.canvas = KitBuildUI.buildConceptMapData(this.canvas);
+        data.map = {
+          cmid: CmapApp.uuidv4(),
+          direction: this.canvas.direction,
+        };
+        data.fileName = this.fileName ? this.fileName : null;
+        console.log(data, Core.compress(data));
+        if (data.fileName == null) api.saveFileAs(Core.compress(data));
+        
+        // api.saveFileAs(Core.compress(data));
+      }).show();
       // console.log(CmapApp.inst)
-      if (!CmapApp.inst.conceptMap)
-        $(".app-navbar .bt-save-as").trigger("click");
-      else
-        saveAsDialog
-          .setConceptMap(CmapApp.inst.conceptMap)
-          .setTitle("Save Concept Map (Update)")
-          .setIcon("file-earmark-check")
-          .show();
+      // if (!CmapApp.inst.conceptMap)
+      //   $(".app-navbar .bt-save-as").trigger("click");
+      // else
+      //   saveAsDialog
+      //     .setConceptMap(CmapApp.inst.conceptMap)
+      //     .setTitle("Save Concept Map (Update)")
+      //     .setIcon("file-earmark-check")
+      //     .show();
     });
 
-    $(".app-navbar .bt-save-as").on("click", () => {
-      if (this.canvas.cy.elements().length == 0) {
-        UI.warning("Nothing to save. Canvas is empty.").show();
-        return;
-      }
-      saveAsDialog
-        .setConceptMap()
-        .setTitle("Save Concept Map As...")
-        .setIcon("file-earmark-plus")
-        .show();
-    });
+    // $(".app-navbar .bt-save-as").on("click", () => {
+    //   if (this.canvas.cy.elements().length == 0) {
+    //     UI.warning("Nothing to save. Canvas is empty.").show();
+    //     return;
+    //   }
+    //   saveAsDialog
+    //     .setConceptMap()
+    //     .setTitle("Save Concept Map As...")
+    //     .setIcon("file-earmark-plus")
+    //     .show();
+    // });
 
-    $("#concept-map-save-as-dialog .input-title").on("focusout", (e) => {
-      if (
-        $("#input-fid").val().match(/^ *$/) &&
-        !saveAsDialog.cmid &&
-        $(e.currentTarget).val().trim() != ""
-      ) {
-        $("#concept-map-save-as-dialog .bt-generate-fid").trigger("click");
-        let fid = $("#input-fid").val();
-        $("#input-fid").val(fid + parseInt(Math.random() * 100));
-      } else $("#input-fid").val("");
-    });
+    // $("#concept-map-save-as-dialog .input-title").on("focusout", (e) => {
+    //   if (
+    //     $("#input-fid").val().match(/^ *$/) &&
+    //     !saveAsDialog.cmid &&
+    //     $(e.currentTarget).val().trim() != ""
+    //   ) {
+    //     $("#concept-map-save-as-dialog .bt-generate-fid").trigger("click");
+    //     let fid = $("#input-fid").val();
+    //     $("#input-fid").val(fid + parseInt(Math.random() * 100));
+    //   } else $("#input-fid").val("");
+    // });
 
-    $("#concept-map-save-as-dialog").on("click", ".bt-generate-fid", (e) => {
-      // console.log(e)
-      $("#input-fid").val(
-        $("#input-title")
-          .val()
-          .replace(/\s/g, "")
-          .substring(0, 15)
-          .trim()
-          .toUpperCase()
-      ); 
-      e.preventDefault();
-    });
+    // $("#concept-map-save-as-dialog").on("click", ".bt-generate-fid", (e) => {
+    //   // console.log(e)
+    //   $("#input-fid").val(
+    //     $("#input-title")
+    //       .val()
+    //       .replace(/\s/g, "")
+    //       .substring(0, 15)
+    //       .trim()
+    //       .toUpperCase()
+    //   ); 
+    //   e.preventDefault();
+    // });
 
-    $("#concept-map-save-as-dialog").on("click", ".bt-new-topic-form", (e) => {
-      // console.log(e)
-      $("#concept-map-save-as-dialog .form-new-topic").slideDown("fast");
-      e.preventDefault();
-    });
+    // $("#concept-map-save-as-dialog").on("click", ".bt-new-topic-form", (e) => {
+    //   // console.log(e)
+    //   $("#concept-map-save-as-dialog .form-new-topic").slideDown("fast");
+    //   e.preventDefault();
+    // });
 
     $("#concept-map-save-as-dialog").on("submit", (e) => {
       e.preventDefault();
@@ -334,7 +353,14 @@ class CmapApp {
 
     api.openFileResult((e, data) => {
       console.log(e, data);
-      this.decodeMap(importDialog, data.cmap);
+      this.fileName = data.fileName;
+      this.fileData = data;
+      this.decodeMap(importDialog, data.conceptMap);
+      console.error(this);
+    });
+
+    api.openFileCancelled((e, data) => {
+      console.warn(e, data);
     });
 
 
@@ -956,6 +982,7 @@ class CmapApp {
 
   decodeMap(importDialog, data) {
     try {
+      console.log(data);
       let conceptMap = Core.decompress(data);
       Object.assign(conceptMap, {
         cyData: KitBuildUI.composeConceptMap(conceptMap),
