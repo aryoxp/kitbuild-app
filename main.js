@@ -24,7 +24,7 @@ const createWindow = () => {
       spellcheck: true
     },
     autoHideMenuBar: true
-  })
+  });
 
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
@@ -43,8 +43,10 @@ const createComposeKitWindow = (data) => {
       spellcheck: true
     },
     autoHideMenuBar: true,
-    show: false
-  })
+    show: false,
+    parent: mainWindow, 
+    modal: true 
+  });
   composeKitWindow.loadFile('compose-kit.html');
   composeKitWindow.webContents.once('did-finish-load', () => {
     // composeKitWindow.webContents.send('open-kit', data);
@@ -110,9 +112,19 @@ app.whenReady().then(() => {
     });
   });
 
+  async function handleOpenImage() {
+    const { canceled, filePaths } = await dialog.showOpenDialog()
+    if (!canceled) {
+      // return filePaths[0];
+      return fs.readFileSync(filePaths[0], 'base64');
+    }
+  }
+
+  ipcMain.handle('open-image', handleOpenImage);
+
   var saveFile = function (event, data, options) {
     options = Object.assign({silent: false}, options);
-    console.log(data, options);
+    // console.log(data, options);
     let filePath = data.fileName;
     
     if(!filePath) {
@@ -120,14 +132,14 @@ app.whenReady().then(() => {
         defaultPath: 'temp.cmap'
       });
       if (filePath === undefined) {
-        event.sender.send((options.silent ? 'save-file-as-result-silent' : 'save-file-as-result'), false);
+        event.sender.send(('save-file-as-cancelled'), true);
         return;
       }
     }
     if (fs.access(filePath, fs.F_OK, (err) => {
+      delete data.fileName;
       if (err) {
         let d = {};
-        delete data.fileName;
         d.conceptMap = compress(data);
         let fileData = ini.stringify(d);
         fs.writeFileSync(filePath, fileData);
@@ -136,7 +148,7 @@ app.whenReady().then(() => {
       } 
       let d = ini.parse(fs.readFileSync(filePath, {encoding: 'utf-8'}));
       d.conceptMap = compress(data);
-      console.log(filePath, ini.stringify(d));
+      // console.log(filePath, ini.stringify(d));
       let fileData = ini.stringify(d);
       fs.writeFileSync(filePath, fileData);
       event.sender.send((options.silent ? 'save-file-as-result-silent' : 'save-file-as-result'), true, filePath, ini.parse(fileData));
@@ -151,19 +163,9 @@ app.whenReady().then(() => {
   ipcMain.handle('save-file-as-silent', (event, data) => saveFile(event, data, {silent: true}));
 
   ipcMain.handle('compose-kit', (event, fileName) => {
-    console.log(fileName);
+    // console.log(fileName);
     this.fileName = fileName;
     createComposeKitWindow();
-
-    // this.conceptMapData = data;
-    // let data = fs.readFileSync(fileName, {
-    //   encoding: "utf-8"
-    // });
-    // let file = ini.parse(data);
-    // file.fileName = fileName;
-    // // event.sender.send('open-file-result', file);
-    // console.log(data, file);
-    // composeKitWindow.webContents.send('open-kit', file);
   });
 
   ipcMain.handle('load-concept-map', (event) => {
@@ -171,7 +173,7 @@ app.whenReady().then(() => {
       encoding: "utf-8"
     });
     let file = ini.parse(data);
-    console.log(data, file);
+    // console.log(data, file);
     event.sender.send('load-concept-map-result', file.conceptMap);
   });
 
@@ -180,43 +182,108 @@ app.whenReady().then(() => {
       encoding: "utf-8"
     });
     let file = ini.parse(data);
-    console.log(data, file);
+    // console.log(data, file);
     event.sender.send('load-kit-result', file.kit);
   });
+
+  async function handleOpenKit() {
+    const { canceled, filePaths } = await dialog.showOpenDialog()
+    if (!canceled) {
+      return fs.readFileSync(filePaths[0], { encoding: 'utf-8'});
+    }
+  }
+
+  ipcMain.handle('open-kit', handleOpenKit);
 
   ipcMain.handle('save-kit', (event, data) => {
     let d = ini.parse(fs.readFileSync(this.fileName, { encoding: 'utf-8'}));
     d.kit = compress(data);
-    console.log(d);
+    // console.log(d, this.fileName);
     fs.writeFileSync(this.fileName, ini.stringify(d));
     event.sender.send('save-kit-result', true, d);
+  });
 
-    // let filePath = dialog.showSaveDialogSync(mainWindow, {
-    //   defaultPath: 'Untitled.cmap'
-    // });
-    // console.log(filePath, data);
-    // if (filePath !== undefined) {
-    //   // fs.writeFileSync(filePath, data);
-    //   // event.sender.send('save-kit-result', true);
+  saveKitAs = (filePath, d) => {
+    return new Promise((resolve, reject) => {
+      if (fs.access(filePath, fs.F_OK, (err) => {
+        if (err) { // file not exists, it is a new file
+          fs.writeFileSync(filePath, ini.stringify(d));
+          d.fileName = filePath;
+          // console.log('new file', d, this.fileName, this);
+          resolve(d);
+          return d;
+        }
+        // file exists, overwriting
+        let dd = ini.parse(fs.readFileSync(filePath, {encoding: 'utf-8'}));
+        dd.conceptMap = d.conceptMap;
+        dd.kit = d.kit;
+        let fileData = ini.stringify(dd);
+        fs.writeFileSync(filePath, fileData);
+        // console.log('overwriting', dd, this.fileName, this);
+        resolve(dd);
+        return dd;
+      }));
+    });
+  }
 
-    //   if (fs.access(filePath, fs.F_OK, (err) => {
-    //     if (err) {
-    //       let d = {};
-    //       d.cmap = file.cmap;
-    //       d.kit = data;
-    //       fs.writeFileSync(filePath, ini.stringify(d));
-    //       event.sender.send('save-file-as-result', true);
-    //       return;
-    //     } 
-    //     let d = ini.parse(fs.readFileSync(filePath, { encoding: 'utf-8'}));
-    //     d.cmap = file.cmap;
-    //     d.kit = data;
-    //     file = d;
-    //     fs.writeFileSync(filePath, ini.stringify(d));
-    //     event.sender.send('save-file-as-result', true);
-    //   }));
+  ipcMain.handle('save-kit-as', async (event, data) => {
+    let d = ini.parse(fs.readFileSync(this.fileName, { encoding: 'utf-8'}));
+    d.kit = compress(data);    
+    let { canceled, filePath } = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow(), {
+      defaultPath: 'kit-new.cmap'
+    });
+    if (canceled) {
+      return {
+        result: false,
+        reason: 'cancelled'
+      };
+    }
+    this.fileName = filePath;
+    return await saveKitAs(filePath, d);
+  });
 
-    // } else event.sender.send('save-kit-result', false);
+  saveLearnemapAs = (filePath, d) => {
+    return new Promise((resolve, reject) => {
+      if (fs.access(filePath, fs.F_OK, (err) => {
+        if (err) { // file not exists, it is a new file
+          fs.writeFileSync(filePath, ini.stringify(d));
+          d.fileName = filePath;
+          // console.log('new file', d, filePath, this);
+          resolve(d);
+          return d;
+        }
+        // file exists, overwriting
+        let dd = ini.parse(fs.readFileSync(filePath, {encoding: 'utf-8'}));
+        dd.conceptMap = d.conceptMap;
+        dd.kit = d.kit;
+        dd.lmap = d.lmap;
+        let fileData = ini.stringify(dd);
+        fs.writeFileSync(filePath, fileData);
+        // console.log('overwriting', dd, filePath, this);
+        resolve(dd);
+        return dd;
+      }));
+    });
+  }
+
+  ipcMain.handle('save-lmap', async (event, cmap, kit, lmap) => {
+    // console.log(cmap, kit, lmap);
+    let { canceled, filePath } = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow(), {
+      defaultPath: 'student.lmap'
+    });
+    if (canceled) {
+      return {
+        result: false,
+        reason: 'cancelled'
+      };
+    }
+    this.fileName = filePath;
+    let d = {
+      conceptMap: compress(cmap),
+      kit: compress(kit),
+      lmap: compress(lmap)
+    }
+    return await saveLearnemapAs(filePath, d);
   });
 
 })

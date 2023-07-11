@@ -163,6 +163,9 @@ class KitBuildCanvas {
       case KitBuildCanvasTool.PROPAUTHOR:
         this.canvasTool.addTool(what, new KitBuildPropositionAuthorTool(this, settings))
         break;
+      case KitBuildCanvasTool.IMAGE:
+        this.canvasTool.addTool(what, new KitBuildImageTool(this, settings))
+        break;
       case KitBuildCanvasTool.LOCK:
         this.canvasTool.addTool(what, new KitBuildLockTool(this, settings))
         break;
@@ -1535,6 +1538,19 @@ class KitBuildUI {
       }
       return kitMap;  
     } catch (error) { throw error }
+  }
+  static showBackgroundImage(canvas) {
+    canvas.cy.nodes().forEach(n => {
+      let base64 = n.data('image');
+      if(base64) {
+        n.style('background-image', `url("data:image/png;base64,${base64}")`);
+        n.style('background-fit', `cover`);
+        n.style('background-color', `rgba(255,255,255,0)`);
+        n.style('color', `rgb(0,0,0)`);
+        n.style('text-opacity', `0`);
+        n.data('image', base64);
+      };
+    });
   }
 
 }

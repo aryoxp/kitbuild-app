@@ -126,6 +126,7 @@ KitBuildCanvasTool.UNLOCK         = "unlock";
 KitBuildCanvasTool.FOCUS          = "focus";
 KitBuildCanvasTool.PROPOSITION    = "proposition";
 KitBuildCanvasTool.PROPAUTHOR     = "propauthor";
+KitBuildCanvasTool.IMAGE          = "image";
 
 KitBuildCanvasTool.SH_NONE        = 0;
 KitBuildCanvasTool.SH_CONCEPT     = 1;
@@ -1090,6 +1091,41 @@ class KitBuildPropositionAuthorTool extends KitBuildCanvasTool {
   }
 }
 
+class KitBuildImageTool extends KitBuildCanvasTool {
+  constructor(canvas, options) {
+    super(
+      canvas,
+      Object.assign(
+        {
+          showOn: KitBuildCanvasTool.SH_CONCEPT,
+          color: "#1c9426",
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bezier" viewBox="-4 -4 24 24"><path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/><path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/></svg>',
+          gridPos: { x: 0, y: -1 },
+        },
+        options
+      )
+    );
+    this.contextPosition = { x: 0, y: 0 };
+    this.contextRenderedPosition = { x: 0, y: 0 };
+  }
+
+  async action(event, e, nodes) {
+    console.error(event, e, nodes);
+    let base64 = await api.openImage();
+    console.log(base64);
+    if (base64 != undefined) {
+      nodes[0].style('background-image', `url("data:image/png;base64,${base64}")`);
+      nodes[0].style('background-fit', `cover`);
+      nodes[0].style('background-color', `rgba(255,255,255,0)`);
+      nodes[0].style('color', `rgb(0,0,0)`);
+      nodes[0].style('text-opacity', `0`);
+      nodes[0].data('image', base64)
+    }
+    console.log(nodes[0]);
+    return;
+  }
+}
+
 class KitBuildCanvasToolCanvas {
   constructor(canvas, options) {
     // cache the Cytoscape canvas
@@ -1100,6 +1136,7 @@ class KitBuildCanvasToolCanvas {
       {
         toolCanvasId: `kb-${canvas.canvasId}-canvas-tool`,
         indicatorCanvasId: `kb-${canvas.canvasId}-canvas-indicator`,
+        konvaCanvasId: `kb-${canvas.canvasId}-canvas-konva`,
         connectorEnabled: true,
         indicatorEnabled: true,
       },
@@ -1116,6 +1153,9 @@ class KitBuildCanvasToolCanvas {
     this.toolCanvas = $(
       `<canvas data-id="${this.settings.toolCanvasId}" id="${this.settings.toolCanvasId}"></canvas>`
     );
+    this.konvaCanvas = $(
+      `<div data-id="${this.settings.konvaCanvasId}" id="${this.settings.konvaCanvasId}"></div>`
+    );
     this.indicatorCanvas.css({
       position: "absolute",
       "z-index": "5",
@@ -1124,8 +1164,13 @@ class KitBuildCanvasToolCanvas {
       position: "absolute",
       "z-index": "6",
     });
+    this.konvaCanvas.css({
+      position: "absolute",
+      "z-index": "7",
+    });
     this.indicatorCanvas.appendTo($(this.canvas.cy.container()).find("div"));
     this.toolCanvas.appendTo($(this.canvas.cy.container()).find("div"));
+    this.konvaCanvas.appendTo($(this.canvas.cy.container()).find("div"));
 
     // force resize Cytoscape canvas on window resize
     $(window).on("resize", (e) => {
@@ -1145,6 +1190,11 @@ class KitBuildCanvasToolCanvas {
     // set canvas size
     this.resizeCanvas();
 
+    // Initialize Konva canvas
+    // console.log(typeof KitBuildCanvasKonva);
+    if (typeof KitBuildCanvasKonva == 'function')
+      KitBuildCanvasKonva.instance = new KitBuildCanvasKonva(this.canvas.canvasId);
+        
     // get the drawing context
     this.ctx = this.toolCanvas.get(0).getContext("2d");
     this.ictx = this.indicatorCanvas.get(0).getContext("2d");
@@ -1256,6 +1306,10 @@ class KitBuildCanvasToolCanvas {
     $(`#${this.settings.toolCanvasId}`).css("height", sibling.css("height"));
     $(`#${this.settings.toolCanvasId}`).attr("width", this.dimension.w);
     $(`#${this.settings.toolCanvasId}`).attr("height", this.dimension.h);
+    $(`#${this.settings.konvaCanvasId}`).css("width", sibling.css("width"));
+    $(`#${this.settings.konvaCanvasId}`).css("height", sibling.css("height"));
+    $(`#${this.settings.konvaCanvasId}`).attr("width", this.dimension.w);
+    $(`#${this.settings.konvaCanvasId}`).attr("height", this.dimension.h);
 
     return this;
   }

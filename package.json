@@ -28,7 +28,9 @@
   },
   "dependencies": {
     "electron-context-menu": "^3.6.1",
+    "electron-forge": "^5.2.4",
     "electron-squirrel-startup": "^1.0.0",
-    "jquery": "^3.7.0"
+    "jquery": "^3.7.0",
+    "pako": "^2.1.0"
   }
 }
